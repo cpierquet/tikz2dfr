@@ -3,7 +3,8 @@
 % or later, see http://www.latex-project.org/lppl.txtf
 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{tikz2d-fr}[2023/05/23 0.1.0 Petites aides pour l'utilisation de TikZ 2D]
+\ProvidesPackage{tikz2d-fr}[2023/05/28 0.1.1 Petites aides pour l'utilisation de TikZ 2D]
+%0.1.1	Ajout de [TaillePolice] + Commandes Point(s) par transformations (trans / rotat / sym)
 %0.1.0	Version initiale
 
 %------Packages utiles
@@ -46,11 +47,12 @@
 
 %%------Créer/Placer/Nommer Point(s) 2d
 \defKV[TkzTwoDimPoint]{%
-	PosLabel=\xdef\TwoDimLabel{#1},%
-	DecalLabel=\xdef\TwoDimDecalLabel{#1},%
-	StyleMarque=\xdef\TwoDimStylePt{#1},%
-	TailleMarque=\xdef\TwoDimtaillePt{#1},%
-	Couleur=\xdef\TwoDimCoul{#1}
+	PosLabel=\def\TwoDimLabel{#1},%
+	DecalLabel=\def\TwoDimDecalLabel{#1},%
+	StyleMarque=\def\TwoDimStylePt{#1},%
+	TailleMarque=\def\TwoDimtaillePt{#1},%
+	Couleur=\def\TwoDimCoul{#1},%
+	TaillePolice=\def\TwoDimFonte{#1}
 }
 
 \setKVdefault[TkzTwoDimPoint]{%
@@ -59,14 +61,15 @@
 	StyleMarque=o,%
 	TailleMarque=2.5pt,%
 	Couleur=black,%
-	Math=false
+	Math=false,%
+	TaillePolice=\normalsize
 }
 
 \NewDocumentCommand\DefinirPoint{ s O{} m m D<>{#3} }{%
 	%*=label
 	%2=clés
 	%3=nom nœud
-	%4=coordonnées x,y,z
+	%4=coordonnées x,y
 	%5=label si différent
 	\useKVdefault[TkzTwoDimPoint]%
 	\setKV[TkzTwoDimPoint]{#2}%
@@ -74,15 +77,15 @@
 	\coordinate (#3) at (#4) ;
 	\IfBooleanTF{#1}%on désactive le label avec (*)
 		{}%
-		{\draw (#3) node[\TwoDimCoul,\PosTmpLabel=\TwoDimDecalLabel] {\ifboolKV[TkzTwoDimPoint]{Math}{$#5$}{#5}} ;}%
+		{\draw (#3) node[\TwoDimCoul,\PosTmpLabel=\TwoDimDecalLabel,font=\TwoDimFonte] {\ifboolKV[TkzTwoDimPoint]{Math}{$#5$}{#5}} ;}%
 }
 
 \NewDocumentCommand\DefinirPoints{ s O{} m }{%
 	%*=labels off
 	%2=clés
 	%3=liste nom/coordonnées/pos
-	\useKVdefault[TkzTwoDimPoint]%
-	\setKV[TkzTwoDimPoint]{#2}%
+	%\useKVdefault[TkzTwoDimPoint]%
+	%\setKV[TkzTwoDimPoint]{#2}%
 	\setsepchar[.]{ ./}%
 	\readlist*\ListePtsPlan{#3}
 	\xintifboolexpr{\ListePtsPlanlen == 1}%
@@ -125,8 +128,8 @@
 \NewDocumentCommand\MarquerPoints{ O{} m }{%
 	%1=clés
 	%2=liste nom/coordonnées/pos
-	\useKVdefault[TkzTwoDimPoint]%
-	\setKV[TkzTwoDimPoint]{#1}%
+	%\useKVdefault[TkzTwoDimPoint]%
+	%\setKV[TkzTwoDimPoint]{#1}%
 	\foreach \i in {#2}
 	{%
 		\MarquerPoint[#1]{\i}
@@ -218,6 +221,70 @@
 						}%
 				}%
 		}%
+}
+
+%------Définir des points par transformations
+\NewDocumentCommand\ImagePoint{ s O{} m D<>{\tmpptdef} }{%
+	\useKVdefault[TkzTwoDimPoint]%
+	\setKV[TkzTwoDimPoint]{#2}%
+	%si c'est un translation
+	\IfSubStr{#3}{t(}%
+		{%
+			\StrBefore{#3}{=}[\tmpptdef]%
+			\StrBetween{#3}{=}{+}[\tmpptdeb]%
+			\IfSubStr{#3}{,}%
+				{%
+					\StrBetween{#3}{t(}{,}[\tmpk]%
+					\StrBetween{#3}{,}{>}[\tmpvecdeb]%
+					\StrBetween{#3}{>}{)}[\tmpvecfin]%
+				}%
+				{%
+					\xdef\tmpk{1}%
+					\StrBetween{#3}{t(}{>}[\tmpvecdeb]%
+				}%
+			\StrBetween{#3}{>}{)}[\tmpvecfin]%
+			\TransfPosTikzDD{\TwoDimLabel}%
+			\coordinate (\tmpptdef) at ($(\tmpptdeb) + \tmpk*(\tmpvecfin) - \tmpk*(\tmpvecdeb)$) ;
+		}{}%
+	%si c'est une rotation
+	\IfSubStr{#3}{r(}%
+		{%
+			\StrBefore{#3}{=}[\tmpptdef]%
+			\StrBetween{#3}{=}{+}[\tmpptdeb]%
+			\StrBetween{#3}{r(}{,}[\tmpptcenter]%
+			\StrBetween{#3}{,}{)}[\tmpangle]%
+			\TransfPosTikzDD{\TwoDimLabel}%
+			\coordinate (\tmpptdef) at ([rotate around={\tmpangle:(\tmpptcenter)}]\tmpptdeb);
+		}{}%
+	%si c'est une symetrie
+	\IfSubStr{#3}{s(}%
+		{%
+			\StrBefore{#3}{=}[\tmpptdef]%
+			\StrBetween{#3}{=}{+}[\tmpptdeb]%
+			\StrBetween{#3}{s(}{)}[\tmpptcenter]%
+			\TransfPosTikzDD{\TwoDimLabel}%
+			\coordinate (\tmpptdef) at ([rotate around={180:(\tmpptcenter)}]\tmpptdeb);
+		}%
+		{}%
+	\IfBooleanTF{#1}%on désactive le label avec (*)
+		{}%
+		{\draw (\tmpptdef) node[\TwoDimCoul,\PosTmpLabel=\TwoDimDecalLabel,font=\TwoDimFonte] {\ifboolKV[TkzTwoDimPoint]{Math}{$#4$}{#4}} ;}%
+}
+
+\NewDocumentCommand\ImagesPoints{ s O{} m }{%
+	\useKVdefault[TkzTwoDimPoint]%
+	\setKV[TkzTwoDimPoint]{#2}%
+	\setsepchar{§}%
+	\readlist*\listetmptransf{#3}%
+	\foreachitem \formule \in \listetmptransf{%
+		\IfBooleanTF{#1}%
+			{%
+				\ImagePoint*[#2]{\formule}%
+			}%
+			{%
+				\ImagePoint[#2]{\formule}%
+			}%
+	}%
 }
 
 \endinput

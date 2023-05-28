@@ -4,12 +4,13 @@
 
 \documentclass[french,a4paper,11pt]{article}
 \usepackage[margin=2cm,includefoot]{geometry}
-\def\TPversion{0.1.0}
-\def\TPdate{24 Mai 2023}
+\def\TPversion{0.1.1}
+\def\TPdate{28 Mai 2023}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
 \usepackage{tikz2d-fr}
+\usepackage{tkz-euclide}
 \usepackage{awesomebox}
 \usepackage{fontawesome5}
 \usepackage{footnote}
@@ -77,10 +78,10 @@
 		keywordstyle={\color{violet}},%
 		classoffset=2,%
 		alsoletter={-},%
-		morekeywords={\TracerSegments,\DefinirPoints,\DefinirPoint,\MarquerPoint,\MarquerPoints,mainlevee},%
+		morekeywords={\TracerSegments,\DefinirPoints,\DefinirPoint,\MarquerPoint,\MarquerPoints,mainlevee,\ImagePoint,\ImagesPoints},%
 		keywordstyle={\color{green!50!black}},%
 		classoffset=3,%
-		morekeywords={Cap,Style,Couleurs,Cycle,Join,line,cap,line,join,Suite,Couleurs,DecalLabel,StyleMarque,Couleur,Math},%
+		morekeywords={Cap,Style,Couleurs,Cycle,Join,line,cap,line,join,Suite,Couleurs,DecalLabel,StyleMarque,Couleur,Math,TaillePolice},%
 		keywordstyle={\color{orange}}
 	},%
 	#1
@@ -94,9 +95,9 @@
 
 \tcbset{vignetteMaJ/.style={%
 	fontupper={\vphantom{pf}\footnotesize\ttfamily},
-	vignettes,colframe=ForestGreen!50!black,coltitle=white,colback=purple!25,%
+	vignettes,colframe=purple!50!black,coltitle=white,colback=purple!10,%
 	overlay={\begin{tcbclipinterior}%
-			\fill[fill=purple!75]($(interior.south west)$) rectangle node[rotate=90]{\tiny \sffamily{\textcolor{Black}{\scalebox{0.85}[0.75]{\textbf{MàJ}}}}} ($(interior.north west)+(5pt,0pt)$);%
+			\fill[fill=purple!75]($(interior.south west)$) rectangle node[rotate=90]{\tiny \sffamily{\textcolor{black}{\scalebox{0.66}[0.66]{\textbf{MàJ}}}}} ($(interior.north west)+(5pt,0pt)$);%
 	\end{tcbclipinterior}}
 	}
 }
@@ -146,11 +147,19 @@
 
 \vspace{0.25cm}
 
-{$\blacktriangleright$~~Définir et marquer des points.}
+{$\blacktriangleright$~~Définir des points par coordonnées.}
+
+\smallskip
+
+{$\blacktriangleright$~~Définir des points par transformations simples.}
 
 \smallskip
 
 {$\blacktriangleright$~~Tracer des segments, avec option(s) de couleurs.}
+
+\smallskip
+
+{$\blacktriangleright$~~Marquer des points.}
 
 \vspace{1cm}
 
@@ -212,6 +221,8 @@
 
 \part{Historique}
 
+\verb|v0.1.1|~:~~~~Ajout d'une clé \Cle{[TaillePolice]} + Points définis par une transformation simple.
+
 \verb|v0.1.0|~:~~~~Version initiale.
 
 \newpage
@@ -228,6 +239,7 @@ Le package propose des commandes basiques -- francisées -- pour travailler sur 
 \begin{itemize}
 	\item de quoi simuler un tracé à \textit{main levée} ;
 	\item de quoi définir des points (et donc des nœuds) via \textsf{nom/coordonnées/positionlabel} ;
+	\item \cmaj{0.1.1} de quoi définir des points images par des transformations simples ;
 	\item de marquer des points (croix, disques) ;
 	\item de quoi tracer des segments (enchaînés ou non) en spécifiant les couleurs éventuelles.
 \end{itemize}
@@ -244,6 +256,18 @@ Ainsi, les éventuel points (nœuds) créés par \textsf{tikz2d-fr} seront réut
 \smallskip
 
 On peut donc \textit{utiliser} le package \textsf{tikz2d-fr} comme \textit{base} de travail avant des choses plus poussées !
+\end{importantblock}
+
+\subsection{Autres solutions}
+
+\begin{importantblock}
+À noter qu'il existe d'autres solutions graphiques, comme :
+
+\begin{itemize}
+	\item \textsf{\PSTricks} avec \textsf{pst-eucl}\footnotemark\footnotetext{\url{https://www.ctan.org/pkg/pst-eucl}} ;
+	\item \hologo{MetaPost} avec \textsf{ProfCollege} et son environnement \texttt{geometrie}\footnotemark\footnotetext{\url{https://www.ctan.org/pkg/profcollege}}.
+\end{itemize}
+\vspace*{-\baselineskip}\leavevmode
 \end{importantblock}
 
 \subsection{Chargement du package, packages utilisés}
@@ -351,12 +375,12 @@ Les valeurs \Cle{mainlevee=5mm et 0.6pt} donnent des résultats -- à mon sens -
 
 \pagebreak
 
-\section{Définir des points}
+\section{Définir des points par coordonnées}
 
 \subsection{Commandes}
 
 \begin{cautionblock}
-Les commandes \textit{simplifiées} et \textit{francisées} disponible sont :
+Les commandes \textit{simplifiées} et \textit{francisées} disponibles sont :
 
 \begin{itemize}
 	\item \texttt{\textbackslash DefinirPoint} pour définir un point ;
@@ -371,7 +395,7 @@ Les commandes \textit{simplifiées} et \textit{francisées} disponible sont :
 \begin{tikzpicture}[options tikz]
 	%créer/placer/nommer un point
 	\DefinirPoint(*)[clés]{noeud}{coordonnées}<label>
-	%créer/placer/nommer plusieurs points
+	%créer/placer/nommer plusieurs points, sans modification des labels !
 	\DefinirPoints(*)[clés]{liste}
 	%marquer un point
 	\MarquerPoint[clés]{point}
@@ -391,6 +415,9 @@ L'argument optionnel et entre \texttt{[...]} propose les \Cle{clés} suivantes (
 
 \begin{itemize}
 	\item \Cle{PosLabel} pour préciser la position (francisée) du label pour les points ; \hfill{}défaut : \Cle{b}
+	\item \cmaj{0.1.1} \Cle{TaillePolice} pour spécifier la taille de la police du label ;
+	
+	\hfill{}défaut : \Cle{\textbackslash normalsize}
 	\item \Cle{StyleMarque} parmi \Cle{x/o/+} pour spécifier le style de la marque des points ;
 	
 	\hfill{}défaut : \Cle{o}
@@ -422,14 +449,15 @@ De manière un peu plus spécifique :
 
 \begin{itemize}
 	\item le \texttt{<label>} pour la commande \texttt{\textbackslash DefinirPoint} est optionnel, et est identique à \texttt{\{nœud\}} ;
-	\item la \texttt{\{liste\}} pour la commande \texttt{\textbackslash DefinirPoints} est à donner -- par exemple -- sous la forme \texttt{A/2,0/bg B/50:2.5/hd}.
+	\item la \texttt{\{liste\}} pour la commande \texttt{\textbackslash DefinirPoints} est à donner -- par exemple -- sous la forme \texttt{A/xa,ya/poslabel B/alpha:r/poslabel ...}.
 \end{itemize}
 \vspace*{-\baselineskip}\leavevmode
 \end{tipblock}
 
 \begin{DemoCode}[]
 \begin{tikzpicture}
-	\DefinirPoints{A/0,0/ B/4,0/ C/3,2/}
+	\DefinirPoint{A}{0,0}
+	\DefinirPoints{B/4,0/ C/3,2/}
 	\DefinirPoints[Math]{H_1/-1,2.5/}
 	\MarquerPoints{A,B,C,H_1}
 \end{tikzpicture}
@@ -438,11 +466,163 @@ De manière un peu plus spécifique :
 \begin{DemoCode}[]
 \begin{tikzpicture}
 	\DefinirPoints[DecalLabel=1pt,Couleur=blue,Math]{A/0,0/bg B/4,0/bd}
-	\DefinirPoints[DecalLabel=1pt,Couleur=red]{C/3,2/h}
+	\DefinirPoints[DecalLabel=1pt,Couleur=red,TaillePolice=\LARGE]{C/3,2/h}
 	\MarquerPoints[StyleMarque=x,Couleur=violet]{A}
 	\MarquerPoints[Couleur=orange]{B}
 	\MarquerPoint[StyleMarque=+,Couleur=red]{C}
 \end{tikzpicture}
+\end{DemoCode}
+
+\pagebreak
+
+\section{Définir des points par transformation}
+
+\subsection{Commandes}
+
+\begin{cautionblock}
+\cmaj{0.1.1} Les commandes \textit{simplifiées} et \textit{francisées} disponibles sont :
+
+\begin{itemize}
+	\item \texttt{\textbackslash ImagePoint} pour définir un point par transformation ;
+	\item \texttt{\textbackslash ImagesPoints} pour définir des points par transformation.
+\end{itemize}
+\vspace*{-\baselineskip}\leavevmode
+\end{cautionblock}
+
+\begin{noteblock}
+Les \textit{transformations} disponibles sont (l'écriture \textit{mathématique} sert à illustrer la syntaxe \LaTeX{} utilisée) :
+
+\begin{itemize}
+	\item les translations glissées $t(A)=A+k\times\vec{u}$ ;
+	\item les rotations $r(A)=A+{\text{rot}}(\Omega,\theta)$ ;
+	\item les symétries centrales $s(A)=A+{\text{sym}}(I)$.
+\end{itemize}
+\end{noteblock}
+
+\begin{DemoCode}[listing only]
+\begin{tikzpicture}[options tikz]
+	%création des points utiles
+	\DefinirPoint... \DefinirPoints
+	%point défini par une transformation
+	\ImagePoint(*)[clés]{formule}<label point>
+	%points définis par des transformations, sans modification des labels !
+	\ImagesPoints(*)[clés]{formule § formule § ...}
+\end{tikzpicture}
+\end{DemoCode}
+
+\begin{DemoCode}[listing only]
+\begin{tikzpicture}[options tikz]
+	%création des points utiles
+	\DefinirPoint...
+	%point défini par une translation glissée
+	\ImagePoint(*)[clés]{PtArr=PTDep+t(k,DebVect>FinVect)}
+\end{tikzpicture}
+\end{DemoCode}
+
+\hfill
+\begin{tikzpicture}
+	\draw[thin,lightgray] (-2,-1) grid (5,3) ;
+	\DefinirPoints{A/0,0/}
+	\DefinirPoints*{K/-1,1/ L/2,2/}
+	\draw[semithick,->,>=latex] (K)--(L) node[midway,sloped,above] {$\vec{u}$} ;
+	\ImagePoint[Math]{A'=A+t(1.5,K>L)}
+	\draw[semithick,->,>=latex,gray,dashed] (A)--(A') node[midway,sloped,below] {$k\times\vec{u}$} ;
+	\MarquerPoints{A,A'}
+\end{tikzpicture}
+\hfill~
+
+\begin{DemoCode}[listing only]
+\begin{tikzpicture}[options tikz]
+	%création des points utiles
+	\DefinirPoint...
+	%point défini par une rotation
+	\ImagePoint{PtArr=PTDep+r(centre,angle)}
+	%point défini par une symétrie centrale
+\end{tikzpicture}
+\end{DemoCode}
+
+\hfill
+\begin{tikzpicture}
+	\draw[thin,lightgray] (-2,0) grid (4,4) ;
+	\DefinirPoint[Math]{Omega}{0,1}<\Omega>
+	\DefinirPoint{A}{3,0.5}
+	\ImagePoint[Math]{A'=A+r(Omega,55)}
+	\draw[semithick,->,>=latex,gray,dashed] (Omega)--(A) ;
+	\draw[semithick,->,>=latex,gray,dashed] (Omega)--(A') ;
+	\tkzPicAngle["$\mathcolor{gray}{\alpha}$",draw=gray,<->,angle eccentricity=1.2,angle radius=1cm](A,Omega,A')
+	\MarquerPoints{Omega,A,A'}
+\end{tikzpicture}
+\hfill~
+
+\begin{DemoCode}[listing only]
+\begin{tikzpicture}[options tikz]
+	%création des points utiles
+	\DefinirPoint...
+	\ImagePoint{PtArr=PTDep+s(centre)}
+\end{tikzpicture}
+\end{DemoCode}
+
+\hfill
+\begin{tikzpicture}
+	\draw[thin,lightgray] (-4,-1) grid (5,2) ;
+	\DefinirPoints{A/4,1/ I/0.5,0.5/}
+	\ImagePoint[Math]{A'=A+s(I)}
+	\draw[semithick,->,>=latex,gray,dashed] (I)--(A) node[midway,sloped] {$/\!/$} ;
+	\draw[semithick,->,>=latex,gray,dashed] (I)--(A') node[midway,sloped] {$/\!/$} ;
+	\MarquerPoints{A,I,A'}
+\end{tikzpicture}
+\hfill~
+
+\subsection{Clés, options et arguments}
+
+\begin{tipblock}
+Les versions étoilées désactivent l'affichage des labels des points.
+
+\smallskip
+
+L'argument optionnel et entre \texttt{[...]} propose les \Cle{clés} suivantes (communes ou spécifiques) :
+
+\begin{itemize}
+	\item \Cle{PosLabel} pour préciser la position (francisée) du label pour les points ; \hfill{}défaut : \Cle{b}
+	\item \Cle{TaillePolice} pour spécifier la taille de la police du label ;
+	
+	\hfill{}défaut : \Cle{\textbackslash normalsize}
+	\item \Cle{StyleMarque} parmi \Cle{x/o/+} pour spécifier le style de la marque des points ;
+	
+	\hfill{}défaut : \Cle{o}
+	\item \Cle{Math} : booléen pour afficher le label en mode math ; \hfill{}défaut : \Cle{false}
+	\item \Cle{TailleMarque} pour spécifier la taille de la marque des points (disque/ croix) ;
+	
+	\hfill{}défaut : \Cle{2pt}
+	\item \Cle{Couleur} pour paramétrer la couleur.\hfill{}défaut : \Cle{black}
+\end{itemize}
+\vspace*{-\baselineskip}\leavevmode
+\end{tipblock}
+
+\pagebreak
+
+\begin{noteblock}
+On donne par exemple $A(0;0)$, $B(4;1)$ et $C(3;2)$ et on définit les points :
+%
+\begin{itemize}
+	\item $D$ image de $A$ par la translation de vecteur $\overrightarrow{AB}$ ;
+	\item $E$ image de $A$ par la translation de vecteur $\overrightarrow{CB}$ ;
+	\item $F$ image de $A$ par la translation-glissée de vecteur $2\overrightarrow{DB}$ ;
+	\item $G$ image de $F$ par la translation de vecteur $\overrightarrow{BD}$ ;
+	\item $K$ image de $G$ par la rotation de centre $F$ et d'angle 90° ;
+	\item $L$ image de $B$ par la symétrie centrale de centre $C$ ;
+	\item $H_1$ image de $A$ par la translation-glissée de vecteur $-0{,}5\overrightarrow{BA}$.
+\end{itemize}
+\vspace*{-\baselineskip}\leavevmode
+\end{noteblock}
+
+\begin{DemoCode}[tikz lower]
+\draw[thin,lightgray] (-5,-2) grid (8,5) ;
+\DefinirPoints[Math,TaillePolice=\LARGE]{A/0,0/ B/4,1/ C/3,2/}
+\ImagesPoints[TaillePolice=\tiny]{D=C+t(A>B) § E=A+t(C>B) § F=A+t(2,B>C) § G=F+t(B>D) § K=G+r(F,90) § L=B+s(C)}
+\ImagePoint[Math,TaillePolice=\scriptsize]{H_1=A+t(-0.5,B>A)}
+\MarquerPoints{A,B,C,D,E,F,G,K,L}
+\MarquerPoint{H_1}
 \end{DemoCode}
 
 \pagebreak
